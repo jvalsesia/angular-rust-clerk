@@ -14,7 +14,9 @@ export class ClerkService {
   public isLoaded = signal(false);
   
   // Use a default sandbox key, check window or localStorage for overrides if needed
-  private publishableKey = 'pk_test_Z2VudGxlLW9waGFwaC05OC5jbGVyay5hY2NvdW50cy5kZXYk';
+  private publishableKey = (typeof window !== 'undefined' && (window as any).CLERK_PUBLISHABLE_KEY) || 
+                           (typeof localStorage !== 'undefined' && localStorage.getItem('CLERK_PUBLISHABLE_KEY')) || 
+                           'pk_test_a2luZC12ZXJ2ZXQtMzguY2xlcmsuYWNjb3VudHMuZGV2JA';
 
   constructor() {
     this.loadClerkSDK();
@@ -33,6 +35,7 @@ export class ClerkService {
     script.src = 'https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js';
     script.async = true;
     script.crossOrigin = 'anonymous';
+    script.setAttribute('data-clerk-publishable-key', this.publishableKey);
     script.onload = async () => {
       const ClerkClass = (window as any).Clerk;
       if (ClerkClass) {
