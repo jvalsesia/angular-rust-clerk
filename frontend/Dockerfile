@@ -12,7 +12,11 @@ RUN npm run build
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
 ARG SERVICE_PATH
+
+# Set up envsubst filtering for only the BACKEND_URL variable
+ENV NGINX_ENVSUBST_FILTER=BACKEND_URL
+
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-COPY ${SERVICE_PATH}/nginx.conf /etc/nginx/conf.d/default.conf
+COPY ${SERVICE_PATH}/nginx.conf.template /etc/nginx/templates/default.conf.template
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
