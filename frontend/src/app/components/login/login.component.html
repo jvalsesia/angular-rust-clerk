@@ -1,0 +1,24 @@
+<div class="auth-page-container">
+  <div class="glass-auth-box">
+    <div class="auth-header">
+      <h2 class="auth-title">Welcome Back</h2>
+      <p class="auth-subtitle">Authenticate to access the dashboard workspace.</p>
+    </div>
+
+    <div class="widget-wrapper">
+      @if (!isClerkLoaded()) {
+        <div class="spinner-container">
+          <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+          <span class="loading-text">Loading Authentication Services...</span>
+        </div>
+      }
+      
+      <!-- Clerk Mount Node -->
+      <div #clerkSignIn id="clerk-signin-container"></div>
+    </div>
+    
+    <div class="auth-footer">
+      <a routerLink="/" class="back-link">← Return to Landing Page</a>
+    </div>
+  </div>
+</div>
