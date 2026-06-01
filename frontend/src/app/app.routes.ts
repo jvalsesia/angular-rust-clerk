@@ -10,7 +10,7 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { 
     path: 'dashboard', 
-    loadComponent: () => import('./components/landing/landing.component').then(m => m.LandingComponent),
+    loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [authGuard] 
   },
   { path: '**', redirectTo: '' }
