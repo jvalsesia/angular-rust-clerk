@@ -19,6 +19,29 @@ This repository provides a modern, full-stack monorepo boilerplate integrating a
 
 ---
 
+## Core System User Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Angular Client
+    participant Clerk as Clerk Auth API
+    participant Backend as Axum Backend (Rust)
+
+    Client->>Clerk: Render Sign-In/Up
+    Clerk-->>Client: Auth Success (Get JWT)
+    Client->>Backend: Request HTTP + JWT Header
+    rect rgb(240, 240, 240)
+        Note over Clerk, Backend: Token Verification
+        Backend->>Clerk: Fetch JWKS (if not locally cached)
+        Clerk-->>Backend: Return JWKS Keys
+        Note over Backend: Verify signature & claims locally
+    end
+    Backend-->>Client: Type-Safe Protected Data Response
+```
+
+---
+
 ## Workspace Layout
 
 ```
