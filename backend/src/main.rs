@@ -15,7 +15,7 @@ async fn main() {
     let app = create_app(&config);
 
     // Bind listener socket to the configured port
-    let addr = SocketAddr::from(([127, 0, 0, 1], config.port));
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
     info!("Starting Axum server on http://{}", addr);
 
     let listener = TcpListener::bind(&addr).await.unwrap();
