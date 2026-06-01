@@ -1,13 +1,16 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard.component';
 import { AuthService } from '../../services/auth.service';
+import { DataService } from '../../services/data.service';
 import { Router } from '@angular/router';
 import { signal } from '@angular/core';
+import { of } from 'rxjs';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
   let mockAuthService: any;
+  let mockDataService: any;
   let mockRouter: any;
   let mockUserSignal: any;
 
@@ -24,6 +27,14 @@ describe('DashboardComponent', () => {
       signOut: vi.fn().mockResolvedValue(undefined)
     };
 
+    mockDataService = {
+      getProtectedData: vi.fn().mockReturnValue(of({
+        message: 'Mock Secure Message',
+        user_id: 'user_999',
+        timestamp: 1715000000
+      }))
+    };
+
     mockRouter = {
       navigate: vi.fn()
     };
@@ -32,6 +43,7 @@ describe('DashboardComponent', () => {
       imports: [DashboardComponent],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
+        { provide: DataService, useValue: mockDataService },
         { provide: Router, useValue: mockRouter }
       ]
     }).compileComponents();
@@ -53,6 +65,13 @@ describe('DashboardComponent', () => {
     
     const img = compiled.querySelector('.user-avatar') as HTMLImageElement;
     expect(img.src).toBe('http://avatar.com/jane.jpg');
+  });
+
+  it('should render active API integration card data', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.api-card-title')?.textContent).toContain('Secure Server Validation');
+    expect(compiled.querySelector('.api-card-message')?.textContent).toContain('Mock Secure Message');
+    expect(compiled.querySelector('.api-meta-details')?.textContent).toContain('user_999');
   });
 
   it('should trigger auth signOut and routing to root on logout click', async () => {

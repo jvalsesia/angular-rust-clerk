@@ -171,6 +171,26 @@ async fn test_secure_route_valid_token() {
     assert_eq!(body["subject"], "user_integration_123");
     assert_eq!(body["status"], "authorized");
 
+    // Test /api/protected endpoint
+    let app_protected = create_app(&config);
+    let req_protected = Request::builder()
+        .method("GET")
+        .uri("/api/protected")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .body(Body::empty())
+        .unwrap();
+
+    let response_protected = app_protected.oneshot(req_protected).await.unwrap();
+    assert_eq!(response_protected.status(), StatusCode::OK);
+
+    let body_bytes_protected = axum::body::to_bytes(response_protected.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    let body_protected: serde_json::Value = serde_json::from_slice(&body_bytes_protected).unwrap();
+    assert_eq!(body_protected["user_id"], "user_integration_123");
+    assert_eq!(body_protected["message"], "Access granted to secure user dashboard API");
+    assert!(body_protected["timestamp"].is_number());
+
     // Cleanup env changes
     unsafe {
         std::env::remove_var("CLERK_JWKS_URL");

@@ -32,6 +32,20 @@ pub async fn get_user_profile(claims: Claims) -> Json<Value> {
     }))
 }
 
+/// Returns secure protected mock data.
+pub async fn get_protected_data(claims: Claims) -> Json<Value> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    Json(json!({
+        "message": "Access granted to secure user dashboard API",
+        "user_id": claims.sub,
+        "timestamp": now
+    }))
+}
+
 /// Creates the Axum application router with configured CORS policies.
 pub fn create_app(config: &Config) -> Router {
     let mut cors = CorsLayer::new();
@@ -61,5 +75,6 @@ pub fn create_app(config: &Config) -> Router {
     Router::new()
         .route("/api/health", get(health_check))
         .route("/api/user", get(get_user_profile))
+        .route("/api/protected", get(get_protected_data))
         .layer(cors)
 }
