@@ -13,6 +13,8 @@ async fn test_cors_preflight_success() {
     let config = Config {
         port: 3000,
         allowed_origins: vec!["http://localhost:4200".to_string()],
+        clerk_jwks_url: "https://api.clerk.com/v1/jwks".to_string(),
+        clerk_issuer: "https://gentle-ophaph-98.clerk.accounts.dev".to_string(),
     };
     let app = create_app(&config);
 
@@ -38,6 +40,8 @@ async fn test_cors_invalid_origin() {
     let config = Config {
         port: 3000,
         allowed_origins: vec!["http://localhost:4200".to_string()],
+        clerk_jwks_url: "https://api.clerk.com/v1/jwks".to_string(),
+        clerk_issuer: "https://gentle-ophaph-98.clerk.accounts.dev".to_string(),
     };
     let app = create_app(&config);
 
