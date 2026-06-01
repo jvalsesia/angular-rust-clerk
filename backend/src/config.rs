@@ -18,6 +18,7 @@ impl Config {
     /// Attempts to read from a local `.env` configuration file if present.
     pub fn from_env() -> Self {
         // We ignore the error if no .env file exists since env variables may be supplied directly
+        #[cfg(not(test))]
         let _ = dotenvy::dotenv();
 
         let port = env::var("PORT")
