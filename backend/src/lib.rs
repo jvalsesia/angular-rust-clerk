@@ -13,11 +13,22 @@ use config::Config;
 use serde_json::{Value, json};
 use tower_http::cors::CorsLayer;
 
+use claims::Claims;
+
 /// Performs a basic server status check.
 pub async fn health_check() -> Json<Value> {
     Json(json!({
         "status": "ok",
         "message": "Axum server scaffolding is active"
+    }))
+}
+
+/// Returns secure user dashboard data.
+pub async fn get_user_profile(claims: Claims) -> Json<Value> {
+    Json(json!({
+        "subject": claims.sub,
+        "status": "authorized",
+        "message": "Access granted to secure user dashboard API"
     }))
 }
 
@@ -49,5 +60,6 @@ pub fn create_app(config: &Config) -> Router {
 
     Router::new()
         .route("/api/health", get(health_check))
+        .route("/api/user", get(get_user_profile))
         .layer(cors)
 }
