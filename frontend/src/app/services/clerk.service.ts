@@ -37,12 +37,15 @@ export class ClerkService {
     script.crossOrigin = 'anonymous';
     script.setAttribute('data-clerk-publishable-key', this.publishableKey);
     script.onload = async () => {
-      const ClerkClass = (window as any).Clerk;
-      if (ClerkClass) {
+      const clerkGlobal = (window as any).Clerk;
+      if (clerkGlobal) {
         try {
-          const clerk = new ClerkClass(this.publishableKey);
-          await clerk.load();
-          this.clerkInstance = clerk;
+          let instance = clerkGlobal;
+          if (typeof clerkGlobal === 'function') {
+            instance = new clerkGlobal(this.publishableKey);
+          }
+          await instance.load();
+          this.clerkInstance = instance;
           this.isLoaded.set(true);
         } catch (err) {
           console.error('Failed to initialize Clerk instance:', err);
