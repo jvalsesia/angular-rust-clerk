@@ -1,12 +1,13 @@
 # Stage 1: Build the Rust application
 FROM rust:1.96-slim AS builder
+ARG SERVICE_PATH=.
 WORKDIR /usr/src/app
 
 # Install system build dependencies
 RUN apt-get update && apt-get install -y pkg-config libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copy manifests
-COPY Cargo.toml Cargo.lock ./
+COPY ${SERVICE_PATH}/Cargo.toml ${SERVICE_PATH}/Cargo.lock ./
 
 # Build dependencies only (leverage layer cache)
 RUN mkdir src && echo "fn main() {}" > src/main.rs
@@ -14,7 +15,7 @@ RUN cargo build --release
 RUN rm -f src/main.rs
 
 # Copy actual source code
-COPY src ./src
+COPY ${SERVICE_PATH}/src ./src
 
 # Touch main.rs to trigger rebuild of code
 RUN touch src/main.rs && cargo build --release
