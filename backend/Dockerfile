@@ -1,11 +1,7 @@
 # Stage 1: Build the Rust application
-FROM rust:1.96-slim AS builder
+FROM rust:1-bookworm AS builder
 
 WORKDIR /app
-
-# Install system build dependencies
-RUN apt-get update && apt-get install -y pkg-config libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
-
 
 # Build dependencies only (leverage layer cache)
 # Cache dependency compilation: copy manifests first, build a stub, then the
