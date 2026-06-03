@@ -19,7 +19,7 @@ use tower_http::cors::CorsLayer;
 use futures::StreamExt;
 use tokio_util::codec::{FramedRead, LinesCodec};
 use tokio_stream::wrappers::ReceiverStream;
-use tracing::info;
+use tracing::{info, warn};
 use std::convert::Infallible;
 use uuid::Uuid;
 use sqlx::Row;
@@ -96,6 +96,31 @@ pub async fn get_protected_data(claims: Claims) -> Json<Value> {
         "user_id": claims.sub,
         "timestamp": now
     }))
+}
+
+/// Verifies connectivity to the LiteLLM Proxy.
+pub async fn check_litellm_connection(litellm_url: &str, litellm_api_key: &str) {
+    let client = reqwest::Client::new();
+    let url = format!("{}/v1/models", litellm_url.trim_end_matches('/'));
+    
+    info!("Checking LiteLLM connection at {}...", url);
+    let mut request = client.get(&url);
+    if !litellm_api_key.is_empty() {
+        request = request.header("Authorization", format!("Bearer {}", litellm_api_key));
+    }
+
+    match request.send().await {
+        Ok(res) => {
+            if res.status().is_success() {
+                info!("Successfully connected to LiteLLM Proxy at {}", litellm_url);
+            } else {
+                warn!("LiteLLM Proxy returned non-success status: {} at {}", res.status(), litellm_url);
+            }
+        }
+        Err(e) => {
+            warn!("Could not connect to LiteLLM Proxy at {}: {}", litellm_url, e);
+        }
+    }
 }
 
 /// Fetches vector embeddings for input text from the LiteLLM Proxy.

@@ -1,15 +1,38 @@
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::time::Duration;
+use tracing::{info, warn, error};
 use uuid::Uuid;
 
 /// Initializes the PostgreSQL database connection pool.
 pub async fn init_db_pool(database_url: &str) -> Result<PgPool, sqlx::Error> {
-    PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(3))
-        .idle_timeout(Duration::from_secs(600))
-        .connect(database_url)
-        .await
+    let mut attempt = 1;
+    let max_attempts = 5;
+    let delay = Duration::from_secs(2);
+
+    loop {
+        info!("Connecting to database (Attempt {}/{})...", attempt, max_attempts);
+        match PgPoolOptions::new()
+            .max_connections(5)
+            .acquire_timeout(Duration::from_secs(3))
+            .idle_timeout(Duration::from_secs(600))
+            .connect(database_url)
+            .await
+        {
+            Ok(pool) => {
+                info!("Successfully connected to database!");
+                return Ok(pool);
+            }
+            Err(e) => {
+                if attempt >= max_attempts {
+                    error!("FATAL [db] Database connection could not be established after {} attempts. Error: {}", max_attempts, e);
+                    return Err(e);
+                }
+                warn!("Database connection failed: {}. Retrying in {:?}...", e, delay);
+                tokio::time::sleep(delay).await;
+                attempt += 1;
+            }
+        }
+    }
 }
 
 /// Creates a new chat session for a user.

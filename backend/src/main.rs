@@ -13,18 +13,28 @@ async fn main() {
     info!("Loaded configuration: {:?}", config);
 
     // Initialize database connection pool
-    info!("Initializing database connection pool...");
-    let pool = backend::db::init_db_pool(&config.database_url)
-        .await
-        .expect("Failed to initialize database pool");
+    let pool = match backend::db::init_db_pool(&config.database_url).await {
+        Ok(p) => p,
+        Err(_) => {
+            std::process::exit(1);
+        }
+    };
 
     // Run migrations
     info!("Running database migrations...");
-    sqlx::migrate!("./migrations")
+    match sqlx::migrate!("./migrations")
         .run(&pool)
         .await
-        .expect("Failed to run database migrations");
-    info!("Database migrations successfully completed!");
+    {
+        Ok(_) => info!("Database migrations successfully completed!"),
+        Err(e) => {
+            tracing::error!("FATAL [db] Database migration failed: {}", e);
+            std::process::exit(1);
+        }
+    }
+
+    // Verify LiteLLM connection
+    backend::check_litellm_connection(&config.litellm_url, &config.litellm_api_key).await;
 
     let app = create_app(&config, Some(pool));
 
