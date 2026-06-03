@@ -48,6 +48,7 @@ struct TestClaims {
 
 #[tokio::test]
 async fn test_secure_route_missing_header() {
+    let _ = tracing_subscriber::fmt().with_env_filter("info").try_init();
     let config = Config {
         port: 3000,
         allowed_origins: vec!["http://localhost:4200".to_string()],
@@ -77,6 +78,7 @@ async fn test_secure_route_missing_header() {
 
 #[tokio::test]
 async fn test_secure_route_invalid_format() {
+    let _ = tracing_subscriber::fmt().with_env_filter("info").try_init();
     let config = Config {
         port: 3000,
         allowed_origins: vec!["http://localhost:4200".to_string()],
@@ -107,6 +109,7 @@ async fn test_secure_route_invalid_format() {
 
 #[tokio::test]
 async fn test_secure_route_valid_token() {
+    let _ = tracing_subscriber::fmt().with_env_filter("info").try_init();
     // 1. Sprout local server to mock Clerk's JWKS response
     let jwks_mock = Router::new().route("/jwks", get(|| async {
         Json(serde_json::json!({

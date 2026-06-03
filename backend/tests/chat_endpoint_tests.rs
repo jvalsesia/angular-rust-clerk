@@ -48,6 +48,7 @@ EwbuNV/ya+fjusyJd24Xke+J\n\
 
 #[tokio::test]
 async fn test_chat_endpoint_success() {
+    let _ = tracing_subscriber::fmt().with_env_filter("info").try_init();
     // 1. Sprout local server to mock Clerk JWKS response
     let jwks_mock = Router::new().route("/jwks", axum::routing::get(|| async {
         Json(json!({
