@@ -51,7 +51,7 @@ impl Config {
         let litellm_url = env::var("LITELLM_URL")
             .unwrap_or_else(|_| "http://localhost:4000".to_string());
 
-        let litellm_api_key = env::var("LITELLM_API_KEY")
+        let litellm_api_key = env::var("LITELLM_MASTER_KEY")
             .unwrap_or_else(|_| "".to_string());
 
         Self {
@@ -80,7 +80,7 @@ mod tests {
             env::remove_var("CLERK_ISSUER");
             env::remove_var("DATABASE_URL");
             env::remove_var("LITELLM_URL");
-            env::remove_var("LITELLM_API_KEY");
+            env::remove_var("LITELLM_MASTER_KEY");
         }
 
         let config = Config::from_env();
@@ -103,7 +103,7 @@ mod tests {
             env::set_var("CLERK_ISSUER", "https://clerk.example.com");
             env::set_var("DATABASE_URL", "postgres://user:pass@host:5432/db");
             env::set_var("LITELLM_URL", "https://litellm.example.com");
-            env::set_var("LITELLM_API_KEY", "sk-test-key");
+            env::set_var("LITELLM_MASTER_KEY", "sk-test-key");
         }
 
         let config = Config::from_env();
@@ -126,7 +126,7 @@ mod tests {
             env::remove_var("CLERK_ISSUER");
             env::remove_var("DATABASE_URL");
             env::remove_var("LITELLM_URL");
-            env::remove_var("LITELLM_API_KEY");
+            env::remove_var("LITELLM_MASTER_KEY");
         }
     }
 }
