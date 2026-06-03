@@ -11,6 +11,12 @@ pub struct Config {
     pub clerk_jwks_url: String,
     /// Clerk Issuer URL for JWT claim validation.
     pub clerk_issuer: String,
+    /// Database connection URL.
+    pub database_url: String,
+    /// LiteLLM Proxy endpoint URL.
+    pub litellm_url: String,
+    /// LiteLLM Proxy authorization API key.
+    pub litellm_api_key: String,
 }
 
 impl Config {
@@ -39,11 +45,23 @@ impl Config {
         let clerk_issuer = env::var("CLERK_ISSUER")
             .unwrap_or_else(|_| "https://gentle-ophaph-98.clerk.accounts.dev".to_string());
 
+        let database_url = env::var("DATABASE_URL")
+            .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/chat_db".to_string());
+
+        let litellm_url = env::var("LITELLM_URL")
+            .unwrap_or_else(|_| "http://localhost:4000".to_string());
+
+        let litellm_api_key = env::var("LITELLM_API_KEY")
+            .unwrap_or_else(|_| "".to_string());
+
         Self {
             port,
             allowed_origins,
             clerk_jwks_url,
             clerk_issuer,
+            database_url,
+            litellm_url,
+            litellm_api_key,
         }
     }
 }
@@ -60,6 +78,9 @@ mod tests {
             env::remove_var("ALLOWED_ORIGINS");
             env::remove_var("CLERK_JWKS_URL");
             env::remove_var("CLERK_ISSUER");
+            env::remove_var("DATABASE_URL");
+            env::remove_var("LITELLM_URL");
+            env::remove_var("LITELLM_API_KEY");
         }
 
         let config = Config::from_env();
@@ -67,6 +88,9 @@ mod tests {
         assert_eq!(config.allowed_origins, vec!["http://localhost:4200"]);
         assert_eq!(config.clerk_jwks_url, "https://api.clerk.com/v1/jwks");
         assert_eq!(config.clerk_issuer, "https://gentle-ophaph-98.clerk.accounts.dev");
+        assert_eq!(config.database_url, "postgres://postgres:postgres@localhost:5432/chat_db");
+        assert_eq!(config.litellm_url, "http://localhost:4000");
+        assert_eq!(config.litellm_api_key, "");
 
         // Test override case
         unsafe {
@@ -77,6 +101,9 @@ mod tests {
             );
             env::set_var("CLERK_JWKS_URL", "https://clerk.example.com/jwks");
             env::set_var("CLERK_ISSUER", "https://clerk.example.com");
+            env::set_var("DATABASE_URL", "postgres://user:pass@host:5432/db");
+            env::set_var("LITELLM_URL", "https://litellm.example.com");
+            env::set_var("LITELLM_API_KEY", "sk-test-key");
         }
 
         let config = Config::from_env();
@@ -87,6 +114,9 @@ mod tests {
         );
         assert_eq!(config.clerk_jwks_url, "https://clerk.example.com/jwks");
         assert_eq!(config.clerk_issuer, "https://clerk.example.com");
+        assert_eq!(config.database_url, "postgres://user:pass@host:5432/db");
+        assert_eq!(config.litellm_url, "https://litellm.example.com");
+        assert_eq!(config.litellm_api_key, "sk-test-key");
 
         // Clean up environment variables
         unsafe {
@@ -94,6 +124,11 @@ mod tests {
             env::remove_var("ALLOWED_ORIGINS");
             env::remove_var("CLERK_JWKS_URL");
             env::remove_var("CLERK_ISSUER");
+            env::remove_var("DATABASE_URL");
+            env::remove_var("LITELLM_URL");
+            env::remove_var("LITELLM_API_KEY");
         }
     }
 }
+
+

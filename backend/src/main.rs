@@ -12,7 +12,22 @@ async fn main() {
     let config = Config::from_env();
     info!("Loaded configuration: {:?}", config);
 
-    let app = create_app(&config);
+    // Initialize database connection pool
+    info!("Initializing database connection pool...");
+    let pool = backend::db::init_db_pool(&config.database_url)
+        .await
+        .expect("Failed to initialize database pool");
+
+    // Run migrations
+    info!("Running database migrations...");
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run database migrations");
+    info!("Database migrations successfully completed!");
+
+    let app = create_app(&config, Some(pool));
+
 
     // Bind listener socket to the configured port
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));

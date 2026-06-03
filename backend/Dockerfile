@@ -15,10 +15,12 @@ RUN mkdir -p src \
     && rm -rf src
 
 COPY src ./src
+COPY migrations ./migrations
 
 # Touch sources so the cached stub objects are rebuilt with real code.
 RUN touch src/main.rs src/lib.rs \
     && cargo build --release --locked --bin backend
+
 
 # ---- Runtime stage ----
 FROM debian:bookworm-slim AS runtime

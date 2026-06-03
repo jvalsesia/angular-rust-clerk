@@ -1,0 +1,38 @@
+# Environments and Secrets
+.env
+.env.local
+.env.*.local
+*.env
+backend/.env
+frontend/.env
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Rust / Cargo compiled outputs
+target/
+**/target/
+
+# Angular / Nginx compiled outputs and cache
+dist/
+frontend/dist/
+.angular/
+frontend/.angular/
+/tmp
+/out-tsc
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.history/
+
+# System Files
+.DS_Store
+Thumbs.db

@@ -1,4 +1,4 @@
-# Project Intent: Modern Full-Stack Template (Angular + Axum + Clerk)
+# Project Intent: Modern Full-Stack Template (Angular + Axum + Clerk + LiteLLM Proxy)
 
 ## 1. Project Overview
 
@@ -9,6 +9,7 @@ The objective of this project is to build a high-performance, ultra-secure, full
 * **Zero-Overhead Reactivity:** Leverage Angular’s latest native Signals and zoneless architecture.
 * **Compile-Time Type Safety:** Utilize Axum’s macro-free, type-safe extractor routing mechanism.
 * **Turnkey Authentication:** Offload identity management, sign-ins, and sign-ups completely to Clerk.
+* **AI Integration Ready:** Provide a high-performance LLM chat interface backed by a unified routing proxy.
 
 ---
 
@@ -20,6 +21,7 @@ The objective of this project is to build a high-performance, ultra-secure, full
 * **Build Pipeline:** Vite-powered modern `application` builder (replacing traditional Webpack setups).
 * **Testing:** **Vitest** for blistering fast, modern unit testing.
 * **Auth UI:** Integrated via the official Clerk JavaScript / Angular SPA integration to handle Sign-In and Sign-Up flows seamlessly.
+* **AI Chat Component:** A streaming, signal-driven chat interface built with native modern forms.
 
 ### Backend (Rust Axum 0.8+)
 
@@ -27,6 +29,11 @@ The objective of this project is to build a high-performance, ultra-secure, full
 * **Routing & Logic:** `axum` utilizing type-safe extractors (`Json<T>`, `State<S>`).
 * **Middleware:** `tower-http` for production-grade CORS configuration and logging (`tracing`).
 * **Auth Validation:** Cryptographic verification of Clerk-issued JSON Web Tokens (JWTs) using `jsonwebtoken` or `reqwest` for JWKS fetching.
+* **AI Router:** Forwarding chat prompts securely to LiteLLM Proxy using an async HTTP client (e.g., `reqwest`) supporting SSE (Server-Sent Events) for real-time response streaming.
+
+### Infrastructure & Proxy Layer
+
+* **AI Gateway:** **LiteLLM Proxy** acting as a unified OpenAI-compatible gateway to abstract, load-balance, and manage API keys for underlying LLM providers (e.g., Anthropic, OpenAI, or local Ollama instances).
 
 ---
 
@@ -38,17 +45,23 @@ sequenceDiagram
     actor Client as Angular Client
     participant Clerk as Clerk Auth API
     participant Backend as Axum Backend (Rust)
+    participant LiteLLM as LiteLLM Proxy
+    participant LLM as LLM Provider
 
     Client->>Clerk: Render Sign-In/Up
     Clerk-->>Client: Auth Success (Get JWT)
-    Client->>Backend: Request HTTP + JWT Header
+    
     rect rgb(240, 240, 240)
-        Note over Clerk, Backend: Token Verification
-        Backend->>Clerk: Fetch JWKS (if not locally cached)
-        Clerk-->>Backend: Return JWKS Keys
-        Note over Backend: Verify signature & claims locally
+        Note over Client, Backend: Secure LLM Chat Interaction
+        Client->>Backend: Post Prompt (with JWT)
+        Backend->>Clerk: Validate JWT via JWKS
+        Backend->>LiteLLM: Forward Chat Request (OpenAI Spec)
+        LiteLLM->>LLM: Route to Target Provider
+        LLM-->>LiteLLM: Stream Tokens (SSE)
+        LiteLLM-->>Backend: Stream Response
+        Backend-->>Client: Stream Type-Safe Final Response
     end
-    Backend-->>Client: Type-Safe Protected Data Response
+
 ```
 
 ---
@@ -68,11 +81,18 @@ sequenceDiagram
 * Set up an Axum 0.8 base server with new path syntax matching `/{id}` directly, omitting raw string macros.
 * Implement a custom Axum extractor (e.g., `struct Claims`) implementing `FromRequestParts`. This extractor will automatically extract the `Authorization: Bearer <token>` header, decode it using Clerk’s public JSON Web Key Sets (JWKS), and reject unauthorized requests before they ever touch your route handlers.
 
-### Phase 3: Integration & End-to-End Testing
+### Phase 3: LiteLLM Integration & Chat Endpoint
+
+* Setup a containerized **LiteLLM Proxy** instance configuring backend models and securely managing upstream API keys.
+* Create a protected `/api/chat` route in Axum requiring valid Clerk `Claims`.
+* Implement streaming token proxying in Axum using `axum::response::sse::Sse` to forward text streams from LiteLLM directly back to the client without blocking.
+* Build an Angular reactive chat window interface using modern Signals to seamlessly append incoming text fragments to the UI state.
+
+### Phase 4: Integration & End-to-End Testing
 
 * Configure the Angular `HttpInterceptor` to automatically attach the Clerk JWT token to all outbound backend calls.
 * Configure `tower-http::cors::CorsLayer` in Rust to allow local communication during development.
-* Verify that registering or logging in through Clerk correctly cascades access to the Axum backend endpoints.
+* Verify that registering or logging in through Clerk correctly cascades access to the Axum backend endpoints and authorizes the user to prompt the LLM.
 
 ---
 
@@ -80,13 +100,9 @@ sequenceDiagram
 
 * **Clerk Backend Ecosystem:** Clerk does not distribute a first-party, officially maintained *Rust* SDK.
 * *Solution:* We will write a lightweight custom Axum middleware layer using the `jsonwebtoken` crate. This approach is highly performant because it relies on local cryptographic decoding using Clerk's hosted JWKS keys, avoiding a blocking network call on every API request.
-
-
 * **Evolving Framework Semantics:** Axum 0.8 introduces cleaner trait handling and compilation errors, but relies heavily on correct layer ordering.
 * *Solution:* Ensure the `CorsLayer` wraps outside of the authorization extractors to prevent pre-flight `OPTIONS` requests from dropping due to a missing auth token.
-
-
+* **Streaming Overhead and Connection Drops:** Managing stateful Server-Sent Events (SSE) from LiteLLM through Axum down to Angular can leave dangling connections if a client closes the tab mid-generation.
+* *Solution:* Use `tokio::select!` in the Axum handler to monitor the client's connection dropped state (`axum::extract::Request` extensions or stream cancellation tracking) to immediately abort the upstream connection to LiteLLM, saving API tokens.
 
 ---
-
-For a comprehensive guide on setting up the backend structure, this [Rust Web Frameworks in 2026 Tutorial](https://www.youtube.com/watch?v=d6VWjKvr4_I) offers an excellent deep-dive into managing state, extractors, and middleware inside Axum 0.8.

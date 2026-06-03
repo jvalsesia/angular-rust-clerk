@@ -2,7 +2,7 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard.component';
 import { AuthService } from '../../services/auth.service';
 import { DataService } from '../../services/data.service';
-import { Router } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
 
@@ -11,7 +11,7 @@ describe('DashboardComponent', () => {
   let fixture: ComponentFixture<DashboardComponent>;
   let mockAuthService: any;
   let mockDataService: any;
-  let mockRouter: any;
+  let router: Router;
   let mockUserSignal: any;
 
   beforeEach(async () => {
@@ -35,21 +35,19 @@ describe('DashboardComponent', () => {
       }))
     };
 
-    mockRouter = {
-      navigate: vi.fn()
-    };
-
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
+        provideRouter([]),
         { provide: AuthService, useValue: mockAuthService },
-        { provide: DataService, useValue: mockDataService },
-        { provide: Router, useValue: mockRouter }
+        { provide: DataService, useValue: mockDataService }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigate').mockImplementation(() => Promise.resolve(true));
     fixture.detectChanges();
   });
 
@@ -82,6 +80,6 @@ describe('DashboardComponent', () => {
     await fixture.whenStable();
 
     expect(mockAuthService.signOut).toHaveBeenCalled();
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/']);
+    expect(router.navigate).toHaveBeenCalledWith(['/']);
   });
 });

@@ -53,8 +53,11 @@ async fn test_secure_route_missing_header() {
         allowed_origins: vec!["http://localhost:4200".to_string()],
         clerk_jwks_url: "https://api.clerk.com/v1/jwks".to_string(),
         clerk_issuer: "https://issuer.com".to_string(),
+        database_url: "postgres://postgres:postgres@localhost:5432/chat_db".to_string(),
+        litellm_url: "http://localhost:4000".to_string(),
+        litellm_api_key: "".to_string(),
     };
-    let app = create_app(&config);
+    let app = create_app(&config, None);
 
     let req = Request::builder()
         .method("GET")
@@ -79,8 +82,11 @@ async fn test_secure_route_invalid_format() {
         allowed_origins: vec!["http://localhost:4200".to_string()],
         clerk_jwks_url: "https://api.clerk.com/v1/jwks".to_string(),
         clerk_issuer: "https://issuer.com".to_string(),
+        database_url: "postgres://postgres:postgres@localhost:5432/chat_db".to_string(),
+        litellm_url: "http://localhost:4000".to_string(),
+        litellm_api_key: "".to_string(),
     };
-    let app = create_app(&config);
+    let app = create_app(&config, None);
 
     let req = Request::builder()
         .method("GET")
@@ -151,8 +157,11 @@ async fn test_secure_route_valid_token() {
         allowed_origins: vec!["http://localhost:4200".to_string()],
         clerk_jwks_url: mock_jwks_url,
         clerk_issuer: "https://issuer.com".to_string(),
+        database_url: "postgres://postgres:postgres@localhost:5432/chat_db".to_string(),
+        litellm_url: "http://localhost:4000".to_string(),
+        litellm_api_key: "".to_string(),
     };
-    let app = create_app(&config);
+    let app = create_app(&config, None);
 
     let req = Request::builder()
         .method("GET")
@@ -172,7 +181,7 @@ async fn test_secure_route_valid_token() {
     assert_eq!(body["status"], "authorized");
 
     // Test /api/protected endpoint
-    let app_protected = create_app(&config);
+    let app_protected = create_app(&config, None);
     let req_protected = Request::builder()
         .method("GET")
         .uri("/api/protected")

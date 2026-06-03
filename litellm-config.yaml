@@ -1,0 +1,58 @@
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: o1-preview
+    litellm_params:
+      model: openai/o1-preview
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: gemini-1.5-flash
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: "os.environ/GEMINI_API_KEY"
+
+  - model_name: gemini-1.5-pro
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: "os.environ/GEMINI_API_KEY"
+
+  - model_name: gemini-2.0-flash
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: "os.environ/GEMINI_API_KEY"
+
+  - model_name: gemini-2.5-flash
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: "os.environ/GEMINI_API_KEY"
+
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: text-embedding-005
+    litellm_params:
+      model: gemini/text-embedding-005
+      api_key: "os.environ/GEMINI_API_KEY"
+      dimensions: 768
+
+router_settings:
+  routing_strategy: simple-shuffle # Helpful if you add multiple keys/deployments later
+
+litellm_settings:
+  cache: true
+
+cache_params:
+  type: redis
+  host: "os.environ/REDIS_HOST"
+  port: "os.environ/REDIS_PORT"
+  password: "os.environ/REDIS_PASSWORD"
