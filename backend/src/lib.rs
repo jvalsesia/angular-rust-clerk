@@ -77,6 +77,7 @@ pub async fn health_check() -> Json<Value> {
 
 /// Returns secure user dashboard data.
 pub async fn get_user_profile(claims: Claims) -> Json<Value> {
+    info!("Interaction [Frontend -> Backend]: GET /api/user requested by user_id: {}", claims.sub);
     Json(json!({
         "subject": claims.sub,
         "status": "authorized",
@@ -86,6 +87,7 @@ pub async fn get_user_profile(claims: Claims) -> Json<Value> {
 
 /// Returns secure protected mock data.
 pub async fn get_protected_data(claims: Claims) -> Json<Value> {
+    info!("Interaction [Frontend -> Backend]: GET /api/protected requested by user_id: {}", claims.sub);
     use std::time::{SystemTime, UNIX_EPOCH};
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -168,6 +170,10 @@ pub async fn chat_handler(
     claims: Claims,
     Json(payload): Json<ChatRequest>,
 ) -> Sse<impl futures::Stream<Item = Result<Event, Infallible>>> {
+    info!(
+        "Interaction [Frontend -> Backend]: POST /api/chat requested by user_id: {} for session_id: {:?}, model: {}, prompt: \"{}\"",
+        claims.sub, payload.session_id, payload.model, payload.prompt
+    );
     let (tx, rx) = tokio::sync::mpsc::channel::<Result<Event, Infallible>>(100);
 
     let pool = state.db.clone();
@@ -257,6 +263,7 @@ pub async fn chat_handler(
         });
 
         // 5. Query LiteLLM Completions Stream
+        info!("Interaction: Requesting chat completions from LiteLLM Proxy ({}/v1/chat/completions) for user_id: {} using model: {}", config.litellm_url, user_id, payload.model);
         let url = format!("{}/v1/chat/completions", config.litellm_url.trim_end_matches('/'));
         let mut req = client.post(&url).json(&completion_payload);
         if !config.litellm_api_key.is_empty() {
@@ -281,7 +288,7 @@ pub async fn chat_handler(
         loop {
             tokio::select! {
                 _ = tx.closed() => {
-                    info!("Client disconnected. Aborting upstream LiteLLM streaming connection.");
+                    info!("Interaction: Client disconnected (session_id: {}). Aborting upstream LiteLLM streaming connection.", session_id);
                     break;
                 }
                 line = lines.next() => {
@@ -292,6 +299,7 @@ pub async fn chat_handler(
                                 continue;
                             }
                             if text == "data: [DONE]" {
+                                info!("Interaction: Completed streaming assistant response for session_id: {}", session_id);
                                 let _ = tx.send(Ok(Event::default().event("done").data("{}"))).await;
                                 break;
                             }
