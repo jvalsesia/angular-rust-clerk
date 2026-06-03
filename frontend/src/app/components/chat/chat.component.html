@@ -58,7 +58,7 @@
         </div>
       }
 
-      <div class="chat-history-log">
+      <div #chatHistoryLog class="chat-history-log">
         @if (chatHistory().length === 0) {
           <div class="chat-placeholder">
             <div class="placeholder-avatar" *ngIf="user()?.imageUrl">

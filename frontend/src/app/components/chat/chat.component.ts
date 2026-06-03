@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnDestroy, ChangeDetectionStrategy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -27,6 +27,23 @@ export class ChatComponent implements OnDestroy {
   private router = inject(Router);
 
   public user = this.authService.user;
+
+  @ViewChild('chatHistoryLog') private chatHistoryLog?: ElementRef<HTMLDivElement>;
+
+  private scrollToBottom(force: boolean = false) {
+    if (this.chatHistoryLog) {
+      const element = this.chatHistoryLog.nativeElement;
+      const threshold = 150; // px
+      const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+      if (force || isNearBottom) {
+        element.scrollTop = element.scrollHeight;
+      }
+    }
+  }
+
+  private scheduleScrollToBottom(force: boolean = false) {
+    setTimeout(() => this.scrollToBottom(force), 0);
+  }
   public chatHistory = signal<Message[]>([]);
   public selectedModel = signal<string>('gpt-4o-mini');
   public isStreaming = signal<boolean>(false);
@@ -68,6 +85,7 @@ export class ChatComponent implements OnDestroy {
     const userMsg: Message = { role: 'user', content: promptText };
     this.chatHistory.update((history) => [...history, userMsg]);
     this.inputPrompt.set('');
+    this.scheduleScrollToBottom(true);
 
     // Append initial empty assistant message to write streamed tokens into
     const assistantMsgIndex = this.chatHistory().length;
@@ -85,6 +103,7 @@ export class ChatComponent implements OnDestroy {
         embeddingModel: embeddingModel
       }
     ]);
+    this.scheduleScrollToBottom(true);
 
     let assistantResponse = '';
 
@@ -114,6 +133,7 @@ export class ChatComponent implements OnDestroy {
               }
               return updated;
             });
+            this.scheduleScrollToBottom(false);
           } else if (evt.type === 'error') {
             this.errorMessage.set(evt.error);
             this.isStreaming.set(false);
