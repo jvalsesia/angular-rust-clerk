@@ -6,7 +6,11 @@ use tracing::info;
 #[tokio::main]
 async fn main() {
     // Initialize tracing logger
-    tracing_subscriber::fmt::init();
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .init();
 
     // Load server configurations
     let config = Config::from_env();

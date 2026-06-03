@@ -13,6 +13,7 @@ services:
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/chat_db
       - LITELLM_URL=http://litellm:4000
+      - RUST_LOG=info
     restart: unless-stopped
 
   frontend:
