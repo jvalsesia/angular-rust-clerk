@@ -78,7 +78,7 @@ pub async fn save_embedding(
     let sql = if is_1536 {
         "INSERT INTO chat_embeddings (message_id, embedding_1536) VALUES ($1, $2::vector)"
     } else {
-        "INSERT INTO chat_embeddings (message_id, embedding_768) VALUES ($1, $2::vector)"
+        "INSERT INTO chat_embeddings (message_id, embedding_3072) VALUES ($1, $2::vector)"
     };
     sqlx::query(sql)
         .bind(message_id)
@@ -102,7 +102,7 @@ pub async fn get_semantic_context(
          FROM chat_embeddings e \
          JOIN chat_messages m ON e.message_id = m.id \
          JOIN chat_sessions s ON m.session_id = s.id \
-         WHERE s.user_id = $1 AND (e.embedding_1536 <=> $2::vector) < 0.3 \
+         WHERE s.user_id = $1 AND (e.embedding_1536 <=> $2::vector) < 0.5 \
          ORDER BY e.embedding_1536 <=> $2::vector ASC \
          LIMIT $3"
     } else {
@@ -110,8 +110,8 @@ pub async fn get_semantic_context(
          FROM chat_embeddings e \
          JOIN chat_messages m ON e.message_id = m.id \
          JOIN chat_sessions s ON m.session_id = s.id \
-         WHERE s.user_id = $1 AND (e.embedding_768 <=> $2::vector) < 0.3 \
-         ORDER BY e.embedding_768 <=> $2::vector ASC \
+         WHERE s.user_id = $1 AND (e.embedding_3072 <=> $2::vector) < 0.5 \
+         ORDER BY e.embedding_3072 <=> $2::vector ASC \
          LIMIT $3"
     };
 

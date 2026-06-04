@@ -137,7 +137,7 @@ async fn fetch_embedding(
     let (embedding_model, is_1536) = if llm_model.starts_with("gpt") || llm_model.starts_with("o1") {
         ("text-embedding-3-small", true)
     } else {
-        ("text-embedding-005", false)
+        ("gemini-embedding-2", false)
     };
 
     let url = format!("{}/v1/embeddings", litellm_url.trim_end_matches('/'));
@@ -181,15 +181,20 @@ pub async fn chat_handler(
     let user_id = claims.sub.clone();
 
     tokio::spawn(async move {
-        let session_id = payload.session_id.unwrap_or_else(Uuid::new_v4);
+        let mut session_id = payload.session_id.unwrap_or_else(Uuid::new_v4);
         let is_new_session = payload.session_id.is_none();
 
         if let Some(ref pool) = pool {
             if is_new_session {
-                if let Err(e) = db::create_session(pool, &user_id, "New Chat").await {
-                    let err_evt = ErrorEvent { error: format!("Failed to create chat session: {}", e) };
-                    let _ = tx.send(Ok(Event::default().event("error").data(serde_json::to_string(&err_evt).unwrap()))).await;
-                    return;
+                match db::create_session(pool, &user_id, "New Chat").await {
+                    Ok(new_id) => {
+                        session_id = new_id;
+                    }
+                    Err(e) => {
+                        let err_evt = ErrorEvent { error: format!("Failed to create chat session: {}", e) };
+                        let _ = tx.send(Ok(Event::default().event("error").data(serde_json::to_string(&err_evt).unwrap()))).await;
+                        return;
+                    }
                 }
                 // Notify client of new session
                 let session_evt = SessionCreatedEvent { session_id };

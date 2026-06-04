@@ -38,12 +38,13 @@ model_list:
     litellm_params:
       model: openai/text-embedding-3-small
       api_key: "os.environ/OPENAI_API_KEY"
+      dimensions: 1536
 
-  - model_name: text-embedding-005
+  - model_name: gemini-embedding-2
     litellm_params:
-      model: gemini/text-embedding-005
+      model: gemini/gemini-embedding-2
       api_key: "os.environ/GEMINI_API_KEY"
-      dimensions: 768
+      dimensions: 3072
 
 router_settings:
   routing_strategy: simple-shuffle # Helpful if you add multiple keys/deployments later

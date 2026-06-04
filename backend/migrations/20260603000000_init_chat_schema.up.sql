@@ -25,9 +25,9 @@ CREATE INDEX ix_chat_messages_session_id_index ON chat_messages(session_id, mess
 CREATE TABLE chat_embeddings (
     message_id UUID PRIMARY KEY REFERENCES chat_messages(id) ON DELETE CASCADE,
     embedding_1536 vector(1536),
-    embedding_768 vector(768)
+    embedding_3072 vector(3072)
 );
 
 -- HNSW Cosine Similarity indexes (requires pgvector)
 CREATE INDEX ix_chat_embeddings_hnsw_1536 ON chat_embeddings USING hnsw (embedding_1536 vector_cosine_ops);
-CREATE INDEX ix_chat_embeddings_hnsw_768 ON chat_embeddings USING hnsw (embedding_768 vector_cosine_ops);
+-- Note: No HNSW index is created for embedding_3072 due to pgvector's 2000-dimension limit on standard vector type indexes.

@@ -92,7 +92,7 @@ export class ChatComponent implements OnDestroy {
     const model = this.selectedModel();
     const embeddingModel = model.startsWith('gpt') || model.startsWith('o1')
       ? 'text-embedding-3-small'
-      : 'text-embedding-005';
+      : 'gemini-embedding-2';
 
     this.chatHistory.update((history) => [
       ...history,
